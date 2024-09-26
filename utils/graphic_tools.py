@@ -201,12 +201,86 @@ class ClassificationImgHelper:
             output.append(sample)
         return output
 
+    def get_histogram(self, image: Image.Image):
+        """Returns the histograms of an image"""
+        image_np = np.array(image)
+        # Separate the channels
+        red_channel = image_np[:, :, 0]
+        green_channel = image_np[:, :, 1]
+        blue_channel = image_np[:, :, 2]
+
+        # Compute histograms
+        red_hist, red_bins = np.histogram(red_channel, bins=256, range=(0, 256))
+        green_hist, green_bins = np.histogram(green_channel, bins=256, range=(0, 256))
+        blue_hist, blue_bins = np.histogram(blue_channel, bins=256, range=(0, 256))
+
+        return (
+            (red_bins[:-1], red_hist),
+            (green_bins[:-1], green_hist),
+            (blue_bins[:-1], blue_hist),
+        )
+
+    def plot_histograms(
+        self,
+        images: list[Image.Image],
+    ):
+        """Plots the histogram of several images"""
+        fig, axes = plt.subplots(
+            nrows=len(images), ncols=4, figsize=(12, 3 * len(images))
+        )
+        for i, img in enumerate(images):
+            red_hist, green_hist, blue_hist = self.get_histogram(img)
+            ax = axes[i, 0]
+            ax.imshow(img)
+            # ax.axis("off")
+            ax.set_title("Image")
+            ax = axes[i, 1]
+            ax.plot(*red_hist, color="red")
+            ax.set_title("Red")
+
+            ax = axes[i, 2]
+            ax.plot(*green_hist, color="green")
+            ax.set_title("Green")
+
+            ax = axes[i, 3]
+            ax.plot(*blue_hist, color="blue")
+            ax.set_title("Blue")
+
+        plt.tight_layout()
+        plt.show()
+
+    def plot_random_histograms(
+        self,
+        category: str,
+        amount: int = 4,
+        resolution: tuple[int, int] = (224, 224),
+        seed: int = None,
+    ):
+        """Plots the histogram of several images in a category"""
+        sample: list[Path] = self.get_random_sample_with_category(
+            category=category,
+            amount=amount,
+            seed=seed,
+        )[1]
+        images = list(
+            map(
+                lambda p: self.cache.get_image_in_path(
+                    p,
+                    resolution=resolution,
+                    use_filter=False,
+                ),
+                sample,
+            )
+        )
+
+        self.plot_histograms(images)
+
     def plot_random_sample_of_category(
         self,
         category: str,
         amount: int,
         resolution: tuple[int, int] = (512, 512),
-        dull_razor: bool = False,
+        use_filter: bool = False,
         fixed_axes: tuple[ImgAxes, int] = (ImgAxes.Column, 4),
         seed: int = None,
     ):
@@ -218,7 +292,7 @@ class ClassificationImgHelper:
         images = list(
             map(
                 lambda p: self.cache.get_image_in_path(
-                    p, resolution=resolution, dull_razor=dull_razor
+                    p, resolution=resolution, use_filter=use_filter
                 ),
                 sample,
             )
@@ -238,7 +312,7 @@ class ClassificationImgHelper:
         categories: list[str],
         amount: int,
         resolution: tuple[int, int] = (512, 512),
-        dull_razor: bool = False,
+        use_filter: bool = False,
         seed: int = None,
     ):
         sample: list[tuple[str, list[Path]]] = self.get_random_sample_of_categories(
@@ -249,7 +323,7 @@ class ClassificationImgHelper:
         get_imgs = lambda paths: list(
             map(
                 lambda p: self.cache.get_image_in_path(
-                    p, resolution=resolution, dull_razor=dull_razor
+                    p, resolution=resolution, use_filter=use_filter
                 ),
                 paths,
             )
@@ -264,7 +338,7 @@ class ClassificationImgHelper:
         amount: int,
         filters: list[tuple[Callable[[Image.Image], Image.Image], str]],
         resolution: tuple[int, int] = (512, 512),
-        dull_razor: bool = False,
+        use_filter: bool = False,
         seed: int = None,
     ):
         sample = self.get_random_sample(amount=amount, seed=seed)
@@ -273,7 +347,7 @@ class ClassificationImgHelper:
                 lambda p: self.cache.get_image_in_path(
                     p,
                     resolution=resolution,
-                    dull_razor=dull_razor,
+                    use_filter=use_filter,
                 ),
                 sample,
             )
@@ -389,7 +463,7 @@ class SegmentationImgHelper:
         resolution: tuple[int, int] = (512, 512),
         color_map: str = "inferno",
         overlay_alpha: float = 0.3,
-        dull_razor: bool = False,
+        use_filter: bool = False,
         seed: int = None,
     ):
         sample: tuple[list[Path], list[Path]] = self.get_random_sample(
@@ -399,7 +473,7 @@ class SegmentationImgHelper:
             self.cache.get_image_in_path(
                 relative_image_path=p,
                 resolution=resolution,
-                dull_razor=dull_razor,
+                use_filter=use_filter,
             )
             for p in paths
         ]
