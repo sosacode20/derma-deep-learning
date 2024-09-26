@@ -15,7 +15,7 @@ import torch
 import torchvision.transforms.v2 as transforms
 import shutil
 from tqdm import tqdm
-from .cache_image_folder import CacheImgFolder
+from cache_image_folder import CacheImgFolder
 
 
 class ImgAxes(Enum):
