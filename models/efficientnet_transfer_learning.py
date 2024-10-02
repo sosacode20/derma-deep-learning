@@ -23,7 +23,9 @@ def get_efficient_net_b2(
 ):
     model = efficientnet_b2(weights=EfficientNet_B2_Weights.DEFAULT)
     model.classifier = nn.Sequential(
-        [nn.BatchNorm1d(1408), nn.Dropout(dropout_rate), nn.Linear(1408, num_classes)]
+        nn.BatchNorm1d(1408),
+        nn.Dropout(dropout_rate),
+        nn.Linear(1408, num_classes),
     )
     loss = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -56,7 +58,7 @@ def get_efficient_net_b2_transformations():
 
     validation_transform = transforms.Compose(
         [
-            transforms.Resize(330, interpolation=InterpolationMode.BICUBIC),
+            transforms.Resize(300, interpolation=InterpolationMode.BICUBIC),
             transforms.CenterCrop(288),
             transforms.ToImage(),
             transforms.ToDtype(torch.float32, scale=True),
@@ -67,5 +69,5 @@ def get_efficient_net_b2_transformations():
     return train_transform, validation_transform
 
 
-model = get_efficient_net_b2(num_classes=4)
+model, _, _ = get_efficient_net_b2(num_classes=4)
 torchsummary.summary(model, input_data=(3, 288, 288))
