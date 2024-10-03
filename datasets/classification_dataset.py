@@ -11,9 +11,11 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import multiprocessing
 
+
 def get_cpu_count() -> int:
     """Get the number of CPUs available in the system"""
     return multiprocessing.cpu_count()
+
 
 class DermaClassificationDataset(Dataset):
     """This is a dataset for classifying skin lesions"""
@@ -50,12 +52,13 @@ class DermaClassificationDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         else:
-            image = transforms.Compose(
+            def_transform = transforms.Compose(
                 [
                     transforms.ToImage(),
                     transforms.ToDtype(dtype=torch.float32, scale=True),
                 ]
             )
+            image = def_transform(image)
         label = self.metaclass_to_int(metaclass)
         return image, label
 
@@ -72,12 +75,12 @@ class DermaClassificationDataset(Dataset):
         batch_size: int,
         num_workers: int = 4,
         pin_memory: bool = True,
-        drop_last:bool = False,
+        drop_last: bool = False,
     ):
         """Get a balanced dataloader for iterating over this dataset"""
         class_weights = self.get_categories_and_totals()
         sample_weights = [0] * len(self)
-        num_workers = min(max(0,num_workers), get_cpu_count())
+        num_workers = min(max(0, num_workers), get_cpu_count())
 
         # Instead of iterating over the dataset, we can use the labels directly from the dataframe
         series = self.image_df["metaclass"]
@@ -96,8 +99,27 @@ class DermaClassificationDataset(Dataset):
             num_workers=num_workers,
             pin_memory=pin_memory,
             drop_last=drop_last,
+            collate_fn=self.collate_fn,
         )
         return loader
+
+    def get_basic_dataloader(
+        self,
+        batch_size: int,
+        num_workers: int = 4,
+        pin_memory: bool = True,
+        drop_last: bool = False,
+    ):
+        num_workers = min(max(0, num_workers), get_cpu_count())
+        return DataLoader(
+            dataset=self,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            drop_last=drop_last,
+            collate_fn=self.collate_fn,
+        )
 
     @staticmethod
     def _is_valid_structure(image_dataframe: DataFrame):
