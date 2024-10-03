@@ -76,7 +76,7 @@ class RandomDullRazor(torch.nn.Module):
 
         total = min(image_size)
         minimum, maximum = percentage(total, 1), percentage(total, 1.5)
-        minimum, maximum = max(minimum, 3), max(maximum, 3)
+        minimum, maximum = max(minimum, 4), max(maximum, 5)
         return RandomDullRazor(minimum, maximum, probability=probability)
 
     def forward(self, *args):

@@ -8,11 +8,11 @@ from torchvision.transforms.v2.functional import InterpolationMode
 
 def get_device():
     if torch.backends.mps.is_available():
-        device = torch.device("mps")
+        device = "mps"
     elif torch.cuda.is_available():
-        device = torch.device("cuda")
+        device = "cuda"
     else:
-        device = torch.device("cpu")
+        device = "cpu"
     return device
 
 
@@ -30,6 +30,7 @@ def get_efficient_net_b2(
     loss = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     device = get_device()
+    print(f"The name of the device is {device}")
     return model.to(device=device), loss, optimizer
 
 
@@ -69,5 +70,5 @@ def get_efficient_net_b2_transformations():
     return train_transform, validation_transform
 
 
-model, _, _ = get_efficient_net_b2(num_classes=4)
-torchsummary.summary(model, input_data=(3, 288, 288))
+# model, _, _ = get_efficient_net_b2(num_classes=4)
+# torchsummary.summary(model.to(device="cpu"), input_data=(3, 288, 288))
