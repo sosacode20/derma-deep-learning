@@ -70,4 +70,4 @@ def get_efficient_net_b2_transformations():
 
 
 model, _, _ = get_efficient_net_b2(num_classes=4)
-torchsummary.summary(model, input_data=(3, 288, 288))
+torchsummary.summary(model.to(device="cpu"), input_size=(3, 288, 288))
