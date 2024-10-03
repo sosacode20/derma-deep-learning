@@ -22,6 +22,8 @@ def get_efficient_net_b2(
     learning_rate: float = 1e-5,
 ):
     model = efficientnet_b2(weights=EfficientNet_B2_Weights.DEFAULT)
+    for param in model.parameters():
+        param.requires_grad = False
     model.classifier = nn.Sequential(
         nn.BatchNorm1d(1408),
         nn.Dropout(dropout_rate),
