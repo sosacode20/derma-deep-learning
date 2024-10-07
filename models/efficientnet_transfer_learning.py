@@ -1,9 +1,10 @@
-from torchvision.models import EfficientNet_B2_Weights, efficientnet_b2
+from torchvision.models import EfficientNet_B2_Weights, efficientnet_b2, efficientnet_b0, EfficientNet_B0_Weights
 import torchsummary
 import torchvision.transforms.v2 as transforms
 import torch.nn as nn
 import torch
 from torchvision.transforms.v2.functional import InterpolationMode
+from torchinfo import summary
 
 
 def get_device():
@@ -28,6 +29,28 @@ def get_efficient_net_b2(
         nn.BatchNorm1d(1408),
         nn.Dropout(dropout_rate),
         nn.Linear(1408, num_classes),
+    )
+    loss = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    device = get_device()
+    print(f"The name of the device is {device}")
+    return model.to(device=device), loss, optimizer
+
+
+def get_efficient_net_b0(
+    num_classes: int = 4,
+    dropout_rate: float = 0.5,
+    learning_rate: float = 1e-5,
+):
+    model = efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
+    for param in model.parameters():
+        param.requires_grad = False
+    model.classifier = nn.Sequential(
+        nn.BatchNorm1d(1408),
+        nn.Dropout(dropout_rate),
+        nn.Linear(1408, 256),
+        nn.ReLU(),
+        nn.Linear(256, num_classes),
     )
     loss = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -73,4 +96,4 @@ def get_efficient_net_b2_transformations():
 
 
 # model, _, _ = get_efficient_net_b2(num_classes=4)
-# torchsummary.summary(model.to(device="cpu"), input_data=(3, 288, 288))
+# summary(model=model, input_size=(1,3,288,288))
